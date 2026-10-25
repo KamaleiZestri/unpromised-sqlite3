@@ -1,20 +1,19 @@
 {
-    "version": "0.0.0",
+    "version": "0.0.1",
     "contributors": [
         "haxeui",
-        "ianharrigan"
+        "ianharrigan",
+        "KamaleiZestri"
     ],
     "license": "MIT",
     "tags": [
     ],
-    "releasenote": "0.0.0",
+    "releasenote": "0.0.1",
     "dependencies": {
-        "libsqlite3": "",
-        "promises": "",
-        "logging": ""
+        "libsqlite3": ""
     },
     "classPath": "src",
     "name": "sqlite3",
-    "description": "",
-    "url": ""
+    "description": "core-haxe's sqlite3 but with no promises",
+    "url": "https://github.com/KamaleiZestri/unpromised-sqlite3"
 }

@@ -1,18 +1,16 @@
 package sqlite.impl.cpp;
 
-import promises.Promise;
 import sqlite.Sqlite;
 import sqlite.SqliteDatabase as NativeDatabase;
+import sqlite.SqliteOptions.SqliteOptBool;
 import sqlite.SqliteStatement as NativeStatement;
 
 class SqliteDatabase extends DatabaseBase {
     private var _nativeDB:NativeDatabase = null;
 
-    public override function open():Promise<SqliteResult<Bool>> {
-        return new Promise((resolve, reject) -> {
-            _nativeDB = Sqlite.open(this.filename);
-            resolve(new SqliteResult(this, true));
-        });
+    public override function open():SqliteOptBool{
+        _nativeDB = Sqlite.open(this.filename);
+        return Success(new SqliteResult(this, true));
     }
 
     public override function exec(sql:String):Promise<SqliteResult<Bool>> {
@@ -155,10 +153,8 @@ class SqliteDatabase extends DatabaseBase {
         return stmt;
     }
 
-    public override function close():Promise<SqliteResult<Bool>> {
-        return new Promise((resolve, reject) -> {
-            _nativeDB.close();
-            resolve(new SqliteResult(this, true));
-        });
+    public override function close():SqliteOptBool {
+        _nativeDB.close();
+        return Success(new SqliteResult(this, true));
     }
 }
