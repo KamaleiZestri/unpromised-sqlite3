@@ -2,7 +2,10 @@ package sqlite.impl.cpp;
 
 import sqlite.Sqlite;
 import sqlite.SqliteDatabase as NativeDatabase;
+import sqlite.SqliteOptions.SqliteOptArrDyn;
 import sqlite.SqliteOptions.SqliteOptBool;
+import sqlite.SqliteOptions.SqliteOptBool;
+import sqlite.SqliteOptions.SqliteOptDyn;
 import sqlite.SqliteStatement as NativeStatement;
 
 class SqliteDatabase extends DatabaseBase {
@@ -13,102 +16,89 @@ class SqliteDatabase extends DatabaseBase {
         return Success(new SqliteResult(this, true));
     }
 
-    public override function exec(sql:String):Promise<SqliteResult<Bool>> {
-        return new Promise((resolve, reject) -> {
-            try {
-                if (_nativeDB == null) {
-                    reject(new SqliteError("Error", "Database not open"));
-                    return;
-                }
-                var stmt = prepareStatement(sql);
-                stmt.executeStatement();
-                stmt.close();
-                var result = new SqliteResult(this, true);
-                result.lastID = _nativeDB.lastInsertRowId();
-                result.changes = _nativeDB.changes();
-                resolve(result);
-            } catch (e:Dynamic) {
-                reject(new SqliteError("Error", "SQLITE_ERROR: " + e));
+    public override function exec(sql:String):SqliteOptBool {
+        try {
+            if (_nativeDB == null) {
+                return Fail(new SqliteError("Error", "Database not open"));
             }
-        });
+            var stmt = prepareStatement(sql);
+            stmt.executeStatement();
+            stmt.close();
+            var result = new SqliteResult(this, true);
+            result.lastID = _nativeDB.lastInsertRowId();
+            result.changes = _nativeDB.changes();
+            return Success(result);
+        } catch (e:Dynamic) {
+            return Fail(new SqliteError("Error", "SQLITE_ERROR: " + e));
+        }
     }
 
-    public override function get(sql:String, ?param:Dynamic):Promise<SqliteResult<Dynamic>> {
-        return new Promise((resolve, reject) -> {
-            try {
-                if (_nativeDB == null) {
-                    reject(new SqliteError("Error", "Database not open"));
-                    return;
-                }
-                var stmt = prepareStatement(sql, param);
-                var rs = stmt.executeQuery();
-                if (!rs.hasNext()) {
-                    stmt.close();
-                    resolve(new SqliteResult(this, null));
-                    return;
-                }
-
-                var result = rs.next();
-                stmt.close();
-                var result = new SqliteResult(this, result);
-                result.lastID = _nativeDB.lastInsertRowId();
-                result.changes = _nativeDB.changes();
-                resolve(result);
-            } catch (e:Dynamic) {
-                reject(new SqliteError("Error", "SQLITE_ERROR: " + e));
+    public override function get(sql:String, ?param:Dynamic):SqliteOptDyn {
+        try {
+            if (_nativeDB == null) {
+                return Fail(new SqliteError("Error", "Database not open"));
             }
-        });
+            var stmt = prepareStatement(sql, param);
+            var rs = stmt.executeQuery();
+            if (!rs.hasNext()) {
+                stmt.close();
+                return Success(new SqliteResult(this, null));
+            }
+
+            var result = rs.next();
+            stmt.close();
+            var result = new SqliteResult(this, result);
+            result.lastID = _nativeDB.lastInsertRowId();
+            result.changes = _nativeDB.changes();
+            return Success(result);
+        } catch (e:Dynamic) {
+            return Fail(new SqliteError("Error", "SQLITE_ERROR: " + e));
+        }
     }
 
-    public override function all(sql:String, ?param:Dynamic):Promise<SqliteResult<Array<Dynamic>>> {
-        return new Promise((resolve, reject) -> {
-            try {
-                if (_nativeDB == null) {
-                    reject(new SqliteError("Error", "Database not open"));
-                    return;
-                }
-                var stmt = prepareStatement(sql, param);
-                var rs = stmt.executeQuery();
-                var records:Array<Dynamic> = [];
-                while (rs.hasNext()) {
-                    records.push(rs.next());
-                }
-                stmt.close();
-                var result = new SqliteResult(this, records);
-                result.lastID = _nativeDB.lastInsertRowId();
-                result.changes = _nativeDB.changes();
-                resolve(result);
-            } catch (e:Dynamic) {
-                reject(new SqliteError("Error", "SQLITE_ERROR: " + e));
+    public override function all(sql:String, ?param:Dynamic):SqliteOptArrDyn {
+        try {
+            if (_nativeDB == null) {
+                return Fail(new SqliteError("Error", "Database not open"));
             }
-        });
+            var stmt = prepareStatement(sql, param);
+            var rs = stmt.executeQuery();
+            var records:Array<Dynamic> = [];
+            while (rs.hasNext()) {
+                records.push(rs.next());
+            }
+            stmt.close();
+            var result = new SqliteResult(this, records);
+            result.lastID = _nativeDB.lastInsertRowId();
+            result.changes = _nativeDB.changes();
+            return Success(result);
+        } catch (e:Dynamic) {
+            return Fail(new SqliteError("Error", "SQLITE_ERROR: " + e));
+        }
     }
 
-    public override function run(sql:String, ?param:Dynamic):Promise<SqliteResult<Dynamic>> {
-        return new Promise((resolve, reject) -> {
-            try {
-                if (_nativeDB == null) {
-                    reject(new SqliteError("Error", "Database not open"));
-                    return;
-                }
-                var stmt = prepareStatement(sql, param);
-                stmt.executeStatement();
-                stmt.close();
-                var data = null;
-                if (sql.indexOf("INSERT ") != -1) {
-                    var lastInsertedId = _nativeDB.lastInsertRowId();
-                    data = {
-                        lastID: lastInsertedId
-                    }
-                }
-                var result = new SqliteResult(this, data);
-                result.lastID = _nativeDB.lastInsertRowId();
-                result.changes = _nativeDB.changes();
-                resolve(result);
-            } catch (e:Dynamic) {
-                reject(new SqliteError("Error", "SQLITE_ERROR: " + e));
+    public override function run(sql:String, ?param:Dynamic):SqliteOptDyn {
+        try {
+            if (_nativeDB == null) {
+                return Fail(new SqliteError("Error", "Database not open"));
             }
-        });
+            var stmt = prepareStatement(sql, param);
+            stmt.executeStatement();
+            stmt.close();
+            var data = null;
+            if (sql.indexOf("INSERT ") != -1) {
+                var lastInsertedId = _nativeDB.lastInsertRowId();
+                data = {
+                    lastID: lastInsertedId
+                }
+            }
+            var result = new SqliteResult(this, data);
+            result.lastID = _nativeDB.lastInsertRowId();
+            result.changes = _nativeDB.changes();
+            return Success(result);
+        } catch (e:Dynamic) {
+            return Fail(new SqliteError("Error", "SQLITE_ERROR: " + e));
+        }
     }
 
     private function prepareStatement(sql:String, param:Dynamic = null):NativeStatement {
